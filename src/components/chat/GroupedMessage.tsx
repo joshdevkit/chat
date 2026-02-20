@@ -70,11 +70,12 @@ export function GroupedMessage({ messages, isMe, showAvatar }: Props) {
                     </div>
                 )}
 
-                {/* Read receipt */}
                 <ReadReceipt
                     isMe={isMe}
-                    readCount={lastMessage.reads.length}
+                    readers={lastMessage.reads}
                     createdAt={lastMessage.createdAt}
+                    currentUserId={undefined}
+                    showReaders={false}
                 />
             </div>
         </div>
