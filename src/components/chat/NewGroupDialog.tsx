@@ -8,12 +8,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useCreateGroup } from '@/hooks/useConversations'
 import { supabase } from '@/lib/supabase'
 
+interface UserSearchResult {
+  id: string
+  fullName: string
+  avatarUrl: string | null
+}
+
 export function NewGroupDialog() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<any[]>([])
-  const [selected, setSelected] = useState<any[]>([])
+  const [results, setResults] = useState<UserSearchResult[]>([])
+  const [selected, setSelected] = useState<UserSearchResult[]>([])
   const createGroup = useCreateGroup()
   const navigate = useNavigate()
 
@@ -22,10 +28,19 @@ export function NewGroupDialog() {
     if (q.length < 2) { setResults([]); return }
     const { data, error } = await supabase
       .from('User')
-      .select('id, fullName, profile ( avatarUrl )')
+      .select('id, fullName, profile:UserProfile ( avatarUrl )')
       .ilike('fullName', `%${q}%`)
     if (error) throw error
-    setResults(data.filter((u: any) => !selected.find((s) => s.id === u.id)))
+
+    setResults(
+      (data ?? [])
+        .map((u): UserSearchResult => {
+          const profile = u.profile as { avatarUrl: string | null } | { avatarUrl: string | null }[] | null
+          const avatarUrl = Array.isArray(profile) ? profile[0]?.avatarUrl ?? null : profile?.avatarUrl ?? null
+          return { id: u.id, fullName: u.fullName, avatarUrl }
+        })
+        .filter((u) => !selected.some((s) => s.id === u.id))
+    )
   }
 
   const handleCreate = async () => {
@@ -75,7 +90,7 @@ export function NewGroupDialog() {
                 className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted text-left"
               >
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={user.profile?.avatarUrl || ''} />
+                  <AvatarImage src={user.avatarUrl || ''} />
                   <AvatarFallback>{user.fullName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <p className="text-sm">{user.fullName}</p>
