@@ -43,10 +43,8 @@ export function MessageActions({ messageId, conversationId, isMe, isDeleted }: P
             {open && (
                 <div className={cn(
                     'absolute bottom-full mb-1 z-50',
-                    'bg-background border rounded-lg shadow-lg py-1 min-w-37.5',
-                    'right-0 left-2 sm:right-auto',
-                    !isMe && 'sm:left-20',
-                    isMe && 'sm:right-20',
+                    'bg-background border rounded-lg shadow-lg py-1',
+                    isMe ? 'right-0' : 'left-0',  // ← anchor to correct side based on sender
                 )}>
                     {isMe && !isDeleted && (
                         <button
@@ -55,7 +53,7 @@ export function MessageActions({ messageId, conversationId, isMe, isDeleted }: P
                                 setOpen(false)
                             }}
                             disabled={deleteMutation.isPending}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-1 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                         >
                             {deleteMutation.isPending ? 'Unsending...' : 'Unsent'}
                         </button>
@@ -68,7 +66,7 @@ export function MessageActions({ messageId, conversationId, isMe, isDeleted }: P
                                 setOpen(false)
                             }}
                             disabled={hideMutation.isPending}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-1 text-sm text-muted-foreground hover:bg-muted transition-colors"
                         >
                             {hideMutation.isPending ? 'Hiding...' : 'Delete message'}
                         </button>

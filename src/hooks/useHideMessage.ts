@@ -1,5 +1,5 @@
+import { supabase } from '@/lib/supabase'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '@/lib/axios'
 
 interface Params {
     messageId: string
@@ -11,7 +11,11 @@ export function useHideMessage() {
 
     return useMutation({
         mutationFn: async ({ messageId }: Params) => {
-            const { data } = await api.post(`/messages/${messageId}/hide`)
+            const { data } = await supabase.from('Message')
+                .update({ hidden: true })
+                .eq('id', messageId)
+                .select('id, conversationId')
+                .single()
             return data
         },
         onSuccess: (_, { conversationId }) => {

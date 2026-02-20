@@ -78,7 +78,7 @@ export function MessageList({ messages, currentUserId, conversationId, conversat
     if (messages.length === 0) {
         return (
             <div className="flex-1 flex items-end justify-center pb-4 text-muted-foreground text-sm">
-                No messages yet. Say hello! 👋
+                No messages yet. Say hello!
             </div>
         )
     }
@@ -93,7 +93,7 @@ export function MessageList({ messages, currentUserId, conversationId, conversat
                     const isMe = firstMessage.senderId === currentUserId
                     const prevGroup = grouped[index - 1]
                     const showAvatar = !prevGroup || prevGroup.messages[0].senderId !== firstMessage.senderId
-                    const isLatest = index === grouped.length - 1  // ← add
+                    const isLatest = index === grouped.length - 1
 
                     if (group.groupId && group.messages.length > 1) {
                         return (
@@ -104,7 +104,7 @@ export function MessageList({ messages, currentUserId, conversationId, conversat
                                 showAvatar={showAvatar}
                                 conversationId={conversationId}
                                 theme={theme}
-                                isLatest={isLatest}  // ← add
+                                isLatest={isLatest}
                             />
                         )
                     }
@@ -117,7 +117,7 @@ export function MessageList({ messages, currentUserId, conversationId, conversat
                             showAvatar={showAvatar}
                             conversationId={conversationId}
                             theme={theme}
-                            isLatest={isLatest}  // ← add
+                            isLatest={isLatest}
                         />
                     )
                 })}

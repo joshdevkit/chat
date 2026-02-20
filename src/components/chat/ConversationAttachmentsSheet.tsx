@@ -65,7 +65,6 @@ function FileList({ items }: { items: Attachment[] }) {
 export function ConversationAttachmentsSheet({ conversationId }: Props) {
     const [open, setOpen] = useState(false)
     const { data: attachments = [], isLoading } = useConversationAttachments(conversationId, open)
-
     const images = attachments.filter((a) => a.type === 'IMAGE')
     const files = attachments.filter((a) => a.type === 'FILE')
 

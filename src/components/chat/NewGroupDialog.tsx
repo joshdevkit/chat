@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useCreateGroup } from '@/hooks/useConversations'
-import api from '@/lib/axios'
+import { supabase } from '@/lib/supabase'
 
 export function NewGroupDialog() {
   const [open, setOpen] = useState(false)
@@ -20,8 +20,12 @@ export function NewGroupDialog() {
   const handleSearch = async (q: string) => {
     setQuery(q)
     if (q.length < 2) { setResults([]); return }
-    const { data } = await api.get(`/users/search?q=${q}`)
-    setResults(data.users.filter((u: any) => !selected.find((s) => s.id === u.id)))
+    const { data, error } = await supabase
+      .from('User')
+      .select('id, fullName, profile ( avatarUrl )')
+      .ilike('fullName', `%${q}%`)
+    if (error) throw error
+    setResults(data.filter((u: any) => !selected.find((s) => s.id === u.id)))
   }
 
   const handleCreate = async () => {

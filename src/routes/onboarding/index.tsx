@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Header } from '@/components/PageHead'
 import OnboardingForm from '@/components/auth/OnboardingForm'
 
-export const Route = createFileRoute('/onboarding')({
+export const Route = createFileRoute('/onboarding/')({
     component: OnboardingPage,
 })
 

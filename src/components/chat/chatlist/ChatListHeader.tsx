@@ -14,7 +14,6 @@ interface Props {
 export function ChatListHeader({ search, onSearchChange }: Props) {
     const { user } = useAuth()
     const navigate = useNavigate()
-
     return (
         <>
             <div className="px-5 pt-5 pb-3 shrink-0">

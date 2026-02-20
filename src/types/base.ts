@@ -10,24 +10,33 @@ export interface User {
     profile: UserProfile
 }
 
+export interface ProfileUser {
+    id: string
+    fullName: string
+    email?: string
+    profile: {
+        username: string
+        bio?: string | null
+        avatarUrl?: string | null
+        dateOfBirth?: string | null
+    } | null
+}
+
+export type SearchUser = {
+    id: string
+    fullName: string
+    lastSeenAt: string | null
+    profile: {
+        avatarUrl: string | null
+    }[]
+}
+
 export interface SearchResponse {
     users: User[]
 }
 
 export interface ProfileUserResponse {
     user: ProfileUser
-}
-
-export interface ProfileUser {
-    id: string
-    fullName: string
-    lastSeenAt: string | null
-    profile: {
-        username: string
-        bio: string | null
-        avatarUrl: string | null
-        dateOfBirth: string | null
-    } | null
 }
 
 

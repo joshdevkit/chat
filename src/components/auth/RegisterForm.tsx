@@ -1,13 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import api from '@/lib/axios'
-import { getApiError } from '@/lib/utils'
-import type { RegisterResponse } from '@/types/base'
+import { useRegister } from '@/hooks/useRegister'
 
 export default function RegisterForm() {
     const navigate = useNavigate()
@@ -16,14 +13,7 @@ export default function RegisterForm() {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [errors, setErrors] = useState<Record<string, string>>({})
-
-    const mutation = useMutation({
-        mutationFn: async () => {
-            const { data } = await api.post<RegisterResponse>('/auth/register', { fullName, email, password })
-            return data
-        },
-        onSuccess: () => navigate({ to: '/onboarding' }),
-    })
+    const register = useRegister()
 
     const validate = () => {
         const e: Record<string, string> = {}
@@ -42,7 +32,10 @@ export default function RegisterForm() {
         const errs = validate()
         if (Object.keys(errs).length > 0) { setErrors(errs); return }
         setErrors({})
-        mutation.mutate()
+
+        register.mutate({ fullName, email, password }, {
+            onSuccess: () => navigate({ to: '/onboarding' }),
+        })
     }
 
     return (
@@ -101,20 +94,20 @@ export default function RegisterForm() {
                         {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
                     </div>
 
-                    {mutation.isError && (
+                    {register.isError && (
                         <p className="text-sm text-red-500 text-center">
-                            {getApiError(mutation.error, 'Something went wrong')}
+                            {(register.error as Error)?.message || 'Something went wrong'}
                         </p>
                     )}
                 </CardContent>
 
                 <CardFooter className="flex flex-col gap-3 mt-4">
-                    <Button type="submit" className="w-full" disabled={mutation.isPending}>
-                        {mutation.isPending ? 'Creating account...' : 'Create Account'}
+                    <Button type="submit" className="w-full" disabled={register.isPending}>
+                        {register.isPending ? 'Creating account...' : 'Create Account'}
                     </Button>
                     <p className="text-sm text-center text-muted-foreground">
                         Already have an account?{' '}
-                        <Link to="/login" className="text-primary font-medium hover:underline">
+                        <Link to="/auth" className="text-primary font-medium hover:underline">
                             Sign in
                         </Link>
                     </p>

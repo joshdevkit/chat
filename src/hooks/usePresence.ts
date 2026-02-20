@@ -1,9 +1,18 @@
 import { useEffect } from 'react'
-import api from '@/lib/axios'
+import { supabase } from '@/lib/supabase'
 
 export function usePresence() {
     useEffect(() => {
-        const update = () => api.patch('/messages/presence').catch(() => { })
+        const update = async () => {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session) return
+
+            await supabase
+                .from('User')
+                .update({ lastSeenAt: new Date().toISOString() })
+                .eq('id', session.user.id)
+        }
+
         update()
         const interval = setInterval(update, 30000)
         return () => clearInterval(interval)

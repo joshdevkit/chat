@@ -1,14 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { getConversationInfo, useConversations } from '@/hooks/useConversations'
+import { useConversation } from '@/hooks/useConversation'
 import { useMessages } from '@/hooks/useMessages'
 import { useAuth } from '@/hooks/useAuth'
 import { usePresence } from '@/hooks/usePresence'
 import { ChatHeader } from '@/components/chat/ChatHeader'
 import { MessageList } from '@/components/chat/MessageList'
 import { MessageInput } from '@/components/chat/MessageInput'
-import { useQuery } from '@tanstack/react-query'
-import api from '@/lib/axios'
-import type { Conversation } from '@/hooks/useConversations'
 import { Header } from '@/components/PageHead'
 import { useConversationTheme } from '@/hooks/useConversationTheme'
 import { ThemePicker } from '@/components/chat/ThemePicker'
@@ -24,19 +22,14 @@ function ChatPage() {
     const { data: messages = [], isLoading: isMsgsLoading } = useMessages(conversationId)
     const navigate = useNavigate()
     usePresence()
-
     const conversation = conversations?.find((c) => c.id === conversationId)
-    const { data: directConv, isLoading: isDirectLoading } = useQuery({
-        queryKey: ['conversation', conversationId],
-        queryFn: async () => {
-            const { data } = await api.get<{ conversation: Conversation }>(`/conversations/${conversationId}`)
-            return data.conversation
-        },
-        enabled: !isConvsLoading && !conversation,
-    })
+
+    const { data: directConv, isLoading: isDirectLoading } = useConversation(
+        conversationId,
+        !isConvsLoading && !conversation,
+    )
 
     const { data: theme } = useConversationTheme(conversationId)
-
     const resolvedConversation = conversation ?? directConv
     const isLoading = isConvsLoading || (!conversation && isDirectLoading)
 
@@ -53,7 +46,6 @@ function ChatPage() {
             </div>
         )
     }
-
     if (!resolvedConversation) {
         return (
             <div className="flex flex-col h-full items-center justify-center text-muted-foreground text-sm">
@@ -66,39 +58,38 @@ function ChatPage() {
     }
 
     return (
-        <>
-            <div
-                className="flex flex-col h-full transition-colors duration-300"
-                style={{
-                    backgroundColor: theme?.bgColor ?? undefined,
-                    color: theme?.textColor ?? undefined,
-                }}
-            >
-                <Header title={receiverName} />
-                <div className="flex flex-col h-full">
-                    <ChatHeader conversation={resolvedConversation}
-                        currentUserId={user?.id || ''}
-                        actions={
-                            !resolvedConversation.isGroup && (
-                                <ThemePicker
-                                    conversationId={conversationId}
-                                    currentBg={theme?.bgColor ?? null}
-                                    currentText={theme?.textColor ?? null}
-                                />
-                            )
-                        }
-                    />
-                    <MessageList
-                        messages={messages}
-                        currentUserId={user?.id || ''}
-                        conversationId={conversationId}
-                        conversation={resolvedConversation}
-                        isLoading={isMsgsLoading}
-                        theme={theme ?? null}
-                    />
-                    <MessageInput conversationId={conversationId} />
-                </div>
+        <div
+            className="flex flex-col h-full chat-bg-transition"
+            style={{
+                backgroundColor: theme?.bgColor ?? undefined,
+                color: theme?.textColor ?? undefined,
+            }}
+        >
+            <Header title={receiverName} />
+            <div className="flex flex-col h-full">
+                <ChatHeader
+                    conversation={resolvedConversation}
+                    currentUserId={user?.id || ''}
+                    actions={
+                        !resolvedConversation.isGroup && (
+                            <ThemePicker
+                                conversationId={conversationId}
+                                currentBg={theme?.bgColor ?? null}
+                                currentText={theme?.textColor ?? null}
+                            />
+                        )
+                    }
+                />
+                <MessageList
+                    messages={messages}
+                    currentUserId={user?.id || ''}
+                    conversationId={conversationId}
+                    conversation={resolvedConversation}
+                    isLoading={isMsgsLoading}
+                    theme={theme ?? null}
+                />
+                <MessageInput conversationId={conversationId} />
             </div>
-        </>
+        </div>
     )
 }

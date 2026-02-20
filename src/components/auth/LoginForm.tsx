@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import api from '@/lib/axios'
-import { getApiError } from '@/lib/utils'
-import type { LoginResponse } from '@/types/base'
+import { useLogin } from '@/hooks/useLogin'
+import { supabase } from '@/lib/supabase'
 
 interface LoginForm {
     email: string
@@ -18,20 +16,7 @@ export default function LoginForm() {
     const navigate = useNavigate()
     const [form, setForm] = useState<LoginForm>({ email: '', password: '' })
     const [errors, setErrors] = useState<Partial<LoginForm>>({})
-
-    const mutation = useMutation({
-        mutationFn: async (data: LoginForm) => {
-            const res = await api.post<LoginResponse>('/auth/login', data)
-            return res.data
-        },
-        onSuccess: (data) => {
-            if (!data.user.profile) {
-                navigate({ to: '/onboarding' })
-            } else {
-                navigate({ to: '/chat' })
-            }
-        },
-    })
+    const login = useLogin()
 
     const validate = (): boolean => {
         const newErrors: Partial<LoginForm> = {}
@@ -45,10 +30,29 @@ export default function LoginForm() {
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!validate()) return
-        mutation.mutate(form)
+
+        login.mutate({ email: form.email, password: form.password }, {
+            onSuccess: async () => {
+                // check profile directly from supabase after login
+                const { data: { session } } = await supabase.auth.getSession()
+                if (!session) return
+
+                const { data } = await supabase
+                    .from('UserProfile')
+                    .select('id')
+                    .eq('userId', session.user.id)
+                    .maybeSingle()
+
+                if (!data) {
+                    navigate({ to: '/onboarding' })
+                } else {
+                    navigate({ to: '/chat' })
+                }
+            },
+        })
     }
 
     return (
@@ -86,16 +90,16 @@ export default function LoginForm() {
                         {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
                     </div>
 
-                    {mutation.isError && (
+                    {login.isError && (
                         <p className="text-sm text-red-500 text-center">
-                            {getApiError(mutation.error, 'Invalid email or password')}
+                            {(login.error as Error)?.message || 'Invalid email or password'}
                         </p>
                     )}
                 </CardContent>
 
                 <CardFooter className="flex flex-col gap-3 mt-4">
-                    <Button type="submit" className="w-full" disabled={mutation.isPending}>
-                        {mutation.isPending ? 'Signing in...' : 'Sign In'}
+                    <Button type="submit" className="w-full" disabled={login.isPending}>
+                        {login.isPending ? 'Signing in...' : 'Sign In'}
                     </Button>
                     <p className="text-sm text-center text-muted-foreground">
                         Don't have an account?{' '}

@@ -1,76 +1,47 @@
-import { useState } from 'react'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { ArrowLeft, MessageSquare, LogOut, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { useAuth } from '@/hooks/useAuth'
-import { useCreateDM } from '@/hooks/useConversations'
 import { isOnline } from '@/hooks/usePresence'
 import { cn } from '@/lib/utils'
-import api from '@/lib/axios'
-import { queryClient } from '@/lib/queryClient'
-import type { ProfileUserResponse } from '@/types/base'
+import { supabase } from '@/lib/supabase'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { ProfileInfo } from '@/components/profile/ProfileInfo'
 import { EditProfileForm } from '@/components/profile/EditProfileForm'
+import { useProfile } from '@/hooks/useProfile'
+import { ProfileSkeleton } from '@/components/profile/ProfileSkeleton'
+import { ProfileNotFound } from '@/components/profile/ProfileNotFound'
+
 
 export const Route = createFileRoute('/profile/$userId')({
     beforeLoad: async () => {
-        try {
-            await api.get('/auth/me')
-        } catch {
-            throw redirect({ to: '/login' })
-        }
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) throw redirect({ to: '/auth' })
     },
     component: ProfilePage,
 })
 
 function ProfilePage() {
     const { userId } = Route.useParams()
-    const { user: currentUser } = useAuth()
-    const navigate = useNavigate()
-    const createDM = useCreateDM()
-    const isMe = currentUser?.id === userId
-    const [editing, setEditing] = useState(false)
 
-    const { data: profileUser, isLoading } = useQuery({
-        queryKey: ['user', userId],
-        queryFn: async () => {
-            const { data } = await api.get<ProfileUserResponse>(`/users/${userId}`)
-            return data.user
-        },
-    })
-
-    const logoutMutation = useMutation({
-        mutationFn: async () => { await api.post('/auth/logout') },
-        onSuccess: () => {
-            queryClient.clear()
-            navigate({ to: '/login' })
-        },
-    })
-
-    const handleMessage = async () => {
-        if (!profileUser) return
-        const conv = await createDM.mutateAsync(profileUser.id)
-        navigate({ to: '/chat/$conversationId', params: { conversationId: conv.id } })
-    }
+    const {
+        profileUser,
+        isLoading,
+        isMe,
+        editing,
+        setEditing,
+        handleMessage,
+        logout,
+        createDM,
+        navigate,
+    } = useProfile(userId)
 
     if (isLoading) {
-        return (
-            <div className="flex flex-col h-screen items-center justify-center text-muted-foreground text-sm">
-                Loading profile...
-            </div>
-        )
+        return <ProfileSkeleton />
     }
 
     if (!profileUser) {
-        return (
-            <div className="flex flex-col h-screen items-center justify-center text-muted-foreground text-sm">
-                User not found.
-                <button onClick={() => navigate({ to: '/chat' })} className="underline mt-1">Go back</button>
-            </div>
-        )
+        return <ProfileNotFound onBack={() => navigate({ to: '/chat' })} />
     }
 
     const online = isOnline(profileUser.lastSeenAt)
@@ -93,8 +64,8 @@ function ProfilePage() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => logoutMutation.mutate()}
-                            disabled={logoutMutation.isPending}
+                            onClick={() => logout.mutate()}
+                            disabled={logout.isPending}
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                             <LogOut className="w-5 h-5" />
@@ -112,7 +83,6 @@ function ProfilePage() {
                     />
                 ) : (
                     <>
-                        {/* Avatar + name section */}
                         <div className="flex flex-col items-center gap-3 px-6 py-8">
                             <ProfileAvatar
                                 avatarUrl={profileUser.profile?.avatarUrl}
@@ -139,7 +109,6 @@ function ProfilePage() {
 
                         <Separator />
 
-                        {/* Info section */}
                         <div className="px-6 py-4">
                             <ProfileInfo
                                 bio={profileUser.profile?.bio}

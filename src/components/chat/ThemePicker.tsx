@@ -70,7 +70,6 @@ export function ThemePicker({ conversationId, currentBg, currentText }: Props) {
                                 className={cn(
                                     'w-7 h-7 rounded-full border-2 transition-transform hover:scale-110',
                                     c.preview,
-                                    // selected ring
                                     currentBg === c.value || (c.value === null && currentBg === null)
                                         ? 'border-violet-500'
                                         : 'border-border'

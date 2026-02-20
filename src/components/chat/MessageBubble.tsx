@@ -68,34 +68,35 @@ export function MessageBubble({ message, messages, isMe, showAvatar, conversatio
     }
 
 
-
     const hasReactions = Object.keys(groupedReactions).length > 0
 
     return (
         <div className={cn('flex items-end gap-2 group', isMe && 'flex-row-reverse')}>
             {/* Avatar */}
-            <div className="w-7 shrink-0">
-                {showAvatar && !isMe && (
-                    <button
-                        onClick={() => navigate({ to: '/profile/$userId', params: { userId: firstMsg.sender.id } })}
-                    >
-                        <Avatar className="w-7 h-7">
-                            <AvatarImage src={firstMsg.sender.profile?.avatarUrl || ''} />
-                            <AvatarFallback className="text-xs">
-                                {firstMsg.sender.fullName.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
-                    </button>
-                )}
-            </div>
+            {!isMe && (
+                <div className="w-7 shrink-0">
+                    {showAvatar && (
+                        <button
+                            onClick={() => navigate({ to: '/profile/$userId', params: { userId: firstMsg.sender.id } })}
+                        >
+                            <Avatar className="w-7 h-7">
+                                <AvatarImage src={firstMsg.sender.profile?.avatarUrl || ''} />
+                                <AvatarFallback className="text-xs">
+                                    {firstMsg.sender.fullName.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Content column */}
             <div className={cn('max-w-[75%] flex flex-col gap-1', isMe && 'items-end')}>
-                {showAvatar && !isMe && (
+                {/* {showAvatar && !isMe && (
                     <p className="text-xs text-muted-foreground px-1">
                         {firstMsg.sender.fullName}
                     </p>
-                )}
+                )} */}
 
                 {/* Bubble row */}
                 <div className={cn('flex items-center gap-1', isMe ? 'flex-row-reverse' : 'flex-row')}>

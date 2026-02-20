@@ -38,6 +38,11 @@ export function MessageInput({ conversationId }: { conversationId: string }) {
             })
             setText('')
             clearFiles()
+
+            if (inputRef.current) {
+                inputRef.current.style.height = 'auto'
+            }
+
             setTimeout(() => inputRef.current?.focus(), 0)
         } catch (err: unknown) {
             toast.error(getApiError(err), {
@@ -141,7 +146,7 @@ export function MessageInput({ conversationId }: { conversationId: string }) {
                         onChange={(e) => {
                             handleTextChange(e as unknown as React.ChangeEvent<HTMLTextAreaElement>)
                             e.target.style.height = 'auto'
-                            e.target.style.height = `${e.target.scrollHeight}px`
+                            e.target.style.height = e.target.value ? `${e.target.scrollHeight}px` : 'auto'
                         }}
                         onKeyDown={handleKeyDown}
                         placeholder="Type a message..."

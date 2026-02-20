@@ -1,9 +1,5 @@
+import { supabase } from '@/lib/supabase'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '@/lib/axios'
-
-interface DeleteConversation {
-    success: boolean
-}
 
 
 export function useDeleteConversation() {
@@ -11,7 +7,11 @@ export function useDeleteConversation() {
 
     return useMutation({
         mutationFn: async (conversationId: string) => {
-            const { data } = await api.delete<DeleteConversation>(`/conversations/${conversationId}`)
+            const { data } = await supabase.from('Conversation')
+                .delete()
+                .eq('id', conversationId)
+                .select('id')
+                .single()
             return data
         },
         onSuccess: () => {

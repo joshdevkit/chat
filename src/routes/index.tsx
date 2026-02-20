@@ -1,20 +1,14 @@
+import { supabase } from '@/lib/supabase'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import api from '@/lib/axios'
 
-interface MeResponse {
-    user: {
-        id: string
-        profile: { username: string } | null
-    }
-}
 
 export const Route = createFileRoute('/')({
     beforeLoad: async () => {
         try {
-            const { data } = await api.get<MeResponse>('/auth/me')
-            const user = data.user
-            if (!user.profile) {
-                throw redirect({ to: '/onboarding' })
+            const { data: { session } } = await supabase.auth.getSession()
+            const user = session?.user
+            if (!user) {
+                throw redirect({ to: '/auth' })
             }
             throw redirect({ to: '/chat' })
         } catch (err: unknown) {
@@ -25,7 +19,7 @@ export const Route = createFileRoute('/')({
             ) {
                 throw err
             }
-            throw redirect({ to: '/login' })
+            throw redirect({ to: '/auth' })
         }
     },
     component: () => null,

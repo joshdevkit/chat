@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { CalendarIcon, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -10,18 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { cn } from '@/lib/utils'
-import api from '@/lib/axios'
-
-interface ProfileUser {
-    id: string
-    fullName: string
-    profile: {
-        username: string
-        bio?: string | null
-        avatarUrl?: string | null
-        dateOfBirth?: string | null
-    } | null
-}
+import { useEditProfile } from '@/hooks/useEditProfile'
+import type { ProfileUser } from '@/types/base'
 
 interface Props {
     user: ProfileUser
@@ -30,7 +19,6 @@ interface Props {
 }
 
 export function EditProfileForm({ user, onCancel, onSuccess }: Props) {
-    const queryClient = useQueryClient()
     const [fullName, setFullName] = useState(user.fullName)
     const [bio, setBio] = useState(user.profile?.bio || '')
     const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(
@@ -38,40 +26,12 @@ export function EditProfileForm({ user, onCancel, onSuccess }: Props) {
     )
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-    const [errors, setErrors] = useState<Record<string, string>>({})
 
-    const mutation = useMutation({
-        mutationFn: async () => {
-            const formData = new FormData()
-            formData.append('fullName', fullName)
-            if (bio) formData.append('bio', bio)
-            if (dateOfBirth) formData.append('dateOfBirth', dateOfBirth.toISOString())
-            if (avatarFile) formData.append('avatar', avatarFile)
-            const { data } = await api.patch('/users/profile', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            })
-            return data
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['user', user.id] })
-            queryClient.invalidateQueries({ queryKey: ['me'] })
-            onSuccess()
-        },
-    })
-
-    const validate = () => {
-        const e: Record<string, string> = {}
-        if (!fullName.trim()) e.fullName = 'Full name is required'
-        if (bio.length > 160) e.bio = 'Max 160 characters'
-        return e
-    }
+    const { submit, errors, isPending, isError, errorMessage } = useEditProfile(user, onSuccess)
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        const errs = validate()
-        if (Object.keys(errs).length > 0) { setErrors(errs); return }
-        setErrors({})
-        mutation.mutate()
+        submit({ fullName, bio, dateOfBirth, avatarFile })
     }
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,7 +46,7 @@ export function EditProfileForm({ user, onCancel, onSuccess }: Props) {
             {/* Avatar */}
             <div className="flex flex-col items-center gap-2">
                 <Avatar className="w-20 h-20">
-                    <AvatarImage className='object-contain' src={avatarPreview || user.profile?.avatarUrl || ''} />
+                    <AvatarImage className="object-contain" src={avatarPreview || user.profile?.avatarUrl || ''} />
                     <AvatarFallback className="text-xl">{user.fullName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <Label
@@ -162,17 +122,15 @@ export function EditProfileForm({ user, onCancel, onSuccess }: Props) {
                             disabled={(date) => date > new Date()}
                             autoFocus
                             captionLayout="dropdown"
-                            fromYear={1900}
-                            toYear={new Date().getFullYear()}
+                            startMonth={new Date(1900, 0)}
+                            endMonth={new Date()}
                         />
                     </PopoverContent>
                 </Popover>
             </div>
 
-            {mutation.isError && (
-                <p className="text-xs text-destructive text-center">
-                    {(mutation.error as any)?.response?.data?.error || 'Something went wrong'}
-                </p>
+            {isError && (
+                <p className="text-xs text-destructive text-center">{errorMessage}</p>
             )}
 
             {/* Actions */}
@@ -180,8 +138,8 @@ export function EditProfileForm({ user, onCancel, onSuccess }: Props) {
                 <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
                     Cancel
                 </Button>
-                <Button type="submit" className="flex-1" disabled={mutation.isPending}>
-                    {mutation.isPending ? 'Saving...' : 'Save'}
+                <Button type="submit" className="flex-1" disabled={isPending}>
+                    {isPending ? 'Saving...' : 'Save'}
                 </Button>
             </div>
         </form>

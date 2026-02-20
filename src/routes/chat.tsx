@@ -1,13 +1,17 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from '@tanstack/react-router'
-import api from '@/lib/axios'
 import { ChatListPage } from '@/components/chat/ChatListPage'
+import { supabase } from '@/lib/supabase'
 
 export const Route = createFileRoute('/chat')({
     beforeLoad: async () => {
         try {
-            await api.get('/auth/me')
+            const { data: { session } } = await supabase.auth.getSession()
+            const user = session?.user
+            if (!user) {
+                throw redirect({ to: '/auth' })
+            }
         } catch {
-            throw redirect({ to: '/login' })
+            throw redirect({ to: '/auth' })
         }
     },
     component: ChatLayout,

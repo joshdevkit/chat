@@ -124,36 +124,40 @@
     }
 }
 
+
 /* Target the scrollable container */
 .message-list {
     overflow-y: auto;
     scrollbar-width: thin;
-    /* Firefox */
-    scrollbar-color: #888 transparent;
-    /* Firefox thumb & track */
+    scrollbar-color: var(--color-muted-foreground) transparent;
 }
 
 /* Chrome, Edge, Safari */
 .message-list::-webkit-scrollbar {
-    width: 8px;
-    /* width of scrollbar */
+    width: 6px;
 }
 
 .message-list::-webkit-scrollbar-track {
     background: transparent;
-    /* track color */
 }
 
 .message-list::-webkit-scrollbar-thumb {
-    background-color: #888;
-    /* scrollbar handle */
-    border-radius: 4px;
-    /* rounded corners */
-    border: 2px solid transparent;
-    /* space around thumb */
+    background-color: var(--color-muted-foreground);
+    border-radius: 999px;
+    opacity: 0.4;
 }
 
 .message-list::-webkit-scrollbar-thumb:hover {
-    background-color: #555;
-    /* darker on hover */
+    background-color: var(--color-foreground);
+}
+
+/* Smooth theme transitions */
+.chat-bg-transition {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* When a theme bg is active, slightly tint the scrollbar to complement */
+[style*="background-color"] .message-list::-webkit-scrollbar-thumb {
+    background-color: currentColor;
+    opacity: 0.2;
 }

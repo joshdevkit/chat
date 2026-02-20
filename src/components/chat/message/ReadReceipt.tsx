@@ -19,7 +19,7 @@ interface Props {
 
 export function ReadReceipt({ isMe, readers, createdAt, currentUserId, showReaders = false }: Props) {
     const otherReaders = readers.filter((r) => r.userId !== currentUserId)
-
+    // console.log('Readers:', readers, 'Other Readers:', otherReaders)
     return (
         <div className={cn('flex items-center gap-1 px-1', isMe ? 'flex-row-reverse' : 'flex-row')}>
             <span className="text-[10px] text-muted-foreground">
@@ -42,7 +42,7 @@ export function ReadReceipt({ isMe, readers, createdAt, currentUserId, showReade
                     ))}
                     {otherReaders.length > 3 && (
                         <span className="text-[10px] text-muted-foreground pl-1.5">
-                            +{otherReaders.length - 3}
+                            + {otherReaders.length - 3}
                         </span>
                     )}
                 </div>
