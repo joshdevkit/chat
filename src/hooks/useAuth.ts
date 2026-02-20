@@ -19,7 +19,7 @@ async function fetchMe(): Promise<User> {
 }
 
 export function useAuth() {
-    const { data: user, isLoading, isError } = useQuery({
+    const { data: user, isLoading } = useQuery({
         queryKey: ['me'],
         queryFn: fetchMe,
         retry: false,
